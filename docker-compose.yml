@@ -1,0 +1,75 @@
+#version: '3.8'
+
+services:
+
+  # Web Server Service
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www:cached  #為加快docker build速度，使用cache
+      # - ./src:/var/www
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    depends_on:
+      - app
+      - db
+
+  #Database Service
+  # db:
+  #   image : mysql
+  #   container_name : mysql
+  #   volumes:
+  #     - ./mysql/data:/var/lib/mysql
+  #   ports:
+  #     - "3306:3306"
+  #   environment:
+  #     MYSQL_DATABASE: blog
+  #     MYSQL_ROOT_PASSWORD: password
+  db:
+    image: mysql
+    container_name: mysql
+    volumes:
+      - ./mysql/data:/var/lib/mysql:cached  #為加快docker build速度，使用cache
+      # - ./mysql/data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    environment: 
+      - MYSQL_DATABASE=blog
+      - MYSQL_ROOT_PASSWORD=password
+  
+
+  # Application Service
+  app:
+    container_name: blog
+    build: 
+      #context: ./php
+      #dockerfile: Dockerfile
+      context: .
+      dockerfile: php/Dockerfile
+    volumes: #掛載本地目錄到容器
+      - ./src:/var/www:cached     #為加快docker build速度，使用cache
+      #- ./src:/var/www
+    ports:
+      - "9000:9000"
+    working_dir: /var/www
+    #command: sh -c "composer install && php-fpm"  #會讓dockerfile .sh無法執行。command 覆蓋了容器啟動流程，繞過了 Dockerfile 中的 ENTRYPOINT。
+
+  #phpMyAdmin Service
+  # phpmyadmin:
+  #   image: phpmyadmin/phpmyadmin
+  #   container_name: phpmyadmin
+  #   ports:
+  #     - "3400:80"
+  #   depends_on:
+  #     - db
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    ports:
+      - "3400:80"
+    depends_on:
+      - db
+
+

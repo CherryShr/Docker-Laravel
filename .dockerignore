@@ -1,0 +1,5 @@
+mysql/
+*.sock
+*.pid
+vendor/
+node_modules/
